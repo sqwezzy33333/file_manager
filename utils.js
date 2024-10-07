@@ -1,4 +1,5 @@
 import os from 'os';
+import {ACTIONS, ACTIONS_REQUIRE_ARGUMENTS} from './constants.js';
 
 export const getUserName = () => {
     try {
@@ -13,18 +14,37 @@ export const getUserName = () => {
     }
 };
 
-
 export function goodBye(user) {
-    console.log(`Thank you for using File Manager, ${user || 'Mister'}, goodbye!`)
+    console.log(`Thank you for using File Manager, ${user || 'NoName'}, goodbye!`)
 }
 
 export function helloUser(user) {
     if (user) {
-        console.log(`Welcome to the File Manager, ${user || 'Mister'}!`);
+        console.log(`Welcome to the File Manager, ${user || 'NoName'}!`);
     }
-    printCurrentPath();
+    printHomeDir();
 }
 
-export function printCurrentPath() {
+export function printHomeDir() {
     console.log('You are currently in ' + os.homedir());
+}
+
+export function commandValidator(action) {
+
+    const toArray = action.replace(/\s+/g, ' ').trim().split(' ');
+    if (!toArray.length) {
+        return false;
+    }
+    const command = toArray[0];
+    const arg = toArray.find((element) => element.startsWith('--'));
+
+    if (!Object.keys(ACTIONS).includes(command)) {
+        return false;
+    }
+
+    if (!ACTIONS_REQUIRE_ARGUMENTS[command]?.length) {
+        return true;
+    }
+
+    return ACTIONS_REQUIRE_ARGUMENTS[command]?.includes(arg);
 }
