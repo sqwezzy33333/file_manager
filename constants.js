@@ -2,6 +2,7 @@ export const EXIT_COMMAND = '.exit';
 
 export const ACTIONS = {
     up: 'up',
+    cd: 'cd',
     ls: 'ls',
     cat: 'cat',
     add: 'add',
