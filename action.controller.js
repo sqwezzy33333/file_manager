@@ -23,13 +23,18 @@ export class ActionController {
         if (command === ACTIONS.cd) {
             return new CdAction(arg, action, this).handle();
         }
+
+        if(command === ACTIONS.add) {
+            return new AddAction(arg, action, this).handle();
+        }
     }
 
 }
 
 class Action {
-    command = undefined;
-    fileName = undefined
+    command = null;
+    fileName = null;
+    arg = null;
 
     constructor(arg, action, actionController) {
         this.action = action;
@@ -44,15 +49,39 @@ class Action {
     handle() {
     }
 
-    validatePath(path) {
-        return fs.existsSync(path);
-    }
-
     get currentDir() {
         return this.actionController.currentDir;
     }
+
+    get homeDir() {
+        return os.homedir();
+    }
 }
 
+class AddAction extends Action {
+    command = 'add';
+    constructor(arg, action, actionController) {
+        super(arg, action, actionController);
+        this.findFile();
+    }
+
+    handle() {
+        try {
+            const clearFileName = this.fileName.trim().replace(this.currentDir, '');
+            const stream = fs.createWriteStream(path.join(this.currentDir, clearFileName), { flags: 'a', encoding: 'utf8'});
+            stream.write('  ', (error) => {
+                if (error) {
+                    console.log(error);
+                }
+                console.log(`Success, file ${clearFileName} created`);
+                stream.end();
+            });
+
+        } catch (e) {
+            console.log('Не удалось создать файл')
+        }
+    }
+}
 
 class UpAction extends Action {
     constructor(arg, action, actionController) {
@@ -64,7 +93,7 @@ class UpAction extends Action {
         currentPath.splice(currentPath.length - 1, 1);
         const joinNewPath = currentPath.join(path.sep);
 
-        if (this.currentDir === os.homedir()) {
+        if (this.currentDir === this.homeDir) {
             return console.log(this.currentDir);
         }
         try {
@@ -86,18 +115,19 @@ class LsAction extends Action {
 
     handle() {
         fs.readdir(this.currentDir, {withFileTypes: true}, (err, files) => {
+            const LINE = '______________________________________________';
             if (err) {
                 console.log('Ошибка, не удалось прочитать папку')
             }
-            console.log('___________________________________________________________________________');
+            console.log(LINE);
             files.sort((element) => element.isDirectory() ? -1 : 1)
                 .forEach((file, index) => {
                     const changeIndex = index < 10 ? ' ' + index : index;
                     const fileType = file.isDirectory() ? 'directory' : 'file';
-                    console.log(
-                        `${changeIndex} ${this.generateFileName(file.name)} ${fileType}`);
+                    const fileInline = `| ${changeIndex} | ${this.generateFileName(file.name)} | ${fileType} |`
+                    console.log(fileInline);
                 })
-            console.log('___________________________________________________________________________');
+            console.log(LINE);
         })
     }
 
@@ -119,7 +149,11 @@ class CdAction extends Action {
     }
 
     handle() {
-        const newDir = path.join(this.currentDir, this.fileName.replace(os.homedir(), ''));
+        const clearFileName = this.fileName.replace(this.homeDir, '');
+        if (!clearFileName) {
+            return console.log('Путь не существует/ выбран файл');
+        }
+        let newDir = path.join(this.currentDir, clearFileName);
 
         try {
             fs.readdirSync(newDir);
