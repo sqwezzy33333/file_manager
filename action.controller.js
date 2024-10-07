@@ -24,8 +24,12 @@ export class ActionController {
             return new CdAction(arg, action, this).handle();
         }
 
-        if(command === ACTIONS.add) {
+        if (command === ACTIONS.add) {
             return new AddAction(arg, action, this).handle();
+        }
+
+        if (command === ACTIONS.cat) {
+            return new CatAction(arg, action, this).handle();
         }
     }
 
@@ -56,10 +60,38 @@ class Action {
     get homeDir() {
         return os.homedir();
     }
+
+    get pureFileName() {
+        return this.fileName.trim().replace(this.currentDir, '');
+    }
+}
+
+class CatAction extends Action {
+    command = 'cat';
+
+    constructor(arg, action, actionController) {
+        super(arg, action, actionController);
+        this.findFile();
+    }
+
+    handle() {
+        const filePath = path.join(this.currentDir, this.pureFileName);
+
+        if(!fs.existsSync(filePath)) {
+            return console.log('No file')
+        }
+
+        const stream = fs.createReadStream(filePath, {encoding: 'utf8'});
+
+        stream.on('data', data => {
+            process.stdout.write(data.toString());
+        })
+    }
 }
 
 class AddAction extends Action {
     command = 'add';
+
     constructor(arg, action, actionController) {
         super(arg, action, actionController);
         this.findFile();
@@ -67,13 +99,15 @@ class AddAction extends Action {
 
     handle() {
         try {
-            const clearFileName = this.fileName.trim().replace(this.currentDir, '');
-            const stream = fs.createWriteStream(path.join(this.currentDir, clearFileName), { flags: 'a', encoding: 'utf8'});
+            const stream = fs.createWriteStream(path.join(this.currentDir, this.pureFileName), {
+                flags: 'a',
+                encoding: 'utf8'
+            });
             stream.write('  ', (error) => {
                 if (error) {
                     console.log(error);
                 }
-                console.log(`Success, file ${clearFileName} created`);
+                console.log(`Success, file ${this.pureFileName} created`);
                 stream.end();
             });
 
