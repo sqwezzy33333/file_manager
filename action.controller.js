@@ -2,6 +2,7 @@ import {ACTIONS} from "./constants.js";
 import fs from "fs";
 import os from "os";
 import * as path from "node:path";
+import {Action} from "./action.js";
 
 export class ActionController {
 
@@ -31,38 +32,37 @@ export class ActionController {
         if (command === ACTIONS.cat) {
             return new CatAction(arg, action, this).handle();
         }
+
+        if (command === ACTIONS.rn) {
+            return new RenameAction(arg, action, this).handle();
+        }
     }
 
 }
 
-class Action {
-    command = null;
-    fileName = null;
-    arg = null;
+class RenameAction extends Action {
+    command = 'rn';
 
     constructor(arg, action, actionController) {
-        this.action = action;
-        this.arg = arg;
-        this.actionController = actionController;
-    }
-
-    findFile() {
-        this.fileName = this.action.replace(this.command, '').trim();
+        super(arg, action, actionController);
+        this.findFile();
     }
 
     handle() {
-    }
-
-    get currentDir() {
-        return this.actionController.currentDir;
-    }
-
-    get homeDir() {
-        return os.homedir();
-    }
-
-    get pureFileName() {
-        return this.fileName.trim().replace(this.currentDir, '');
+        const splitFileNames = this.pureFileName.split(' ').filter(Boolean);
+        const oldName = splitFileNames[0];
+        const newName = splitFileNames[1];
+        if (!oldName || !newName) {
+            return console.log('File dont exist!');
+        }
+        const oldFilePath = path.join(this.currentDir, oldName);
+        const newFilePath = path.join(this.currentDir, newName);
+        fs.rename(oldFilePath, newFilePath, (err) => {
+            if (err) {
+                return console.log('Error! Failed to rename', err);
+            }
+            console.log('Successfully renamed');
+        })
     }
 }
 
@@ -77,7 +77,7 @@ class CatAction extends Action {
     handle() {
         const filePath = path.join(this.currentDir, this.pureFileName);
 
-        if(!fs.existsSync(filePath)) {
+        if (!fs.existsSync(filePath)) {
             return console.log('No file')
         }
 
