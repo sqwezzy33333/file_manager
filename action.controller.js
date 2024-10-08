@@ -36,6 +36,10 @@ export class ActionController {
         if (command === ACTIONS.rn) {
             return new RenameAction(arg, action, this).handle();
         }
+
+        if(command === ACTIONS.cp) {
+            return new CopyAction(arg, action, this).handle();
+        }
     }
 
 }
@@ -59,10 +63,34 @@ class RenameAction extends Action {
         const newFilePath = path.join(this.currentDir, newName);
         fs.rename(oldFilePath, newFilePath, (err) => {
             if (err) {
-                return console.log('Error! Failed to rename', err);
+                return console.log('Error! Failed to rename');
             }
             console.log('Successfully renamed');
         })
+    }
+}
+
+class CopyAction extends Action {
+    command = 'cp';
+
+    constructor(arg, action, actionController) {
+        super(arg, action, actionController);
+        this.findFile();
+    }
+
+    handle() {
+        const filePath = path.join(this.currentDir, this.pureFileName);
+        if(!fs.existsSync(filePath)) {
+            return console.log('File dont exist!');
+        }
+        const fileName = this.pureFileName.split('.')[0];
+        const ext = this.pureFileName.split('.')[1];
+        const POSTFIX = '_copy';
+        const newFilePath = path.join(this.currentDir, fileName + POSTFIX + '.' + ext);
+        const stream = fs.createReadStream(filePath, { encoding: 'utf8' }).pipe(fs.createWriteStream(newFilePath));
+
+        stream.on('error', (e) => console.log('Error, Cant to copy'));
+        stream.on('finish', () => console.log('Successfully copy'));
     }
 }
 
