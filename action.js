@@ -18,6 +18,10 @@ export class Action {
     handle() {
     }
 
+    printCurrentDir = () => {
+        console.log('You are currently in ' + this.actionController.currentDir);
+    }
+
     get currentDir() {
         return this.actionController.currentDir;
     }
