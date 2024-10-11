@@ -38,4 +38,8 @@ export class Action {
     get pureFileName() {
         return this.fileName.trim().replace(this.currentDir, '');
     }
+
+    get splitFileNames() {
+        return this.pureFileName.split(' ').filter(Boolean);
+    }
 }
