@@ -126,16 +126,13 @@ class MoveAction extends Action {
         const oldName = splitFileNames[0]?.replace(this.currentDir, '');
         const newName = splitFileNames[1]?.replace(this.currentDir, '');
         if (!oldName || !newName) {
-            console.log('File dont exist!');
-            return this.printCurrentDir();
+            return this.displayError();
         }
         const oldFilePath = path.join(this.currentDir, oldName);
         const newFilePath = path.join(this.currentDir, newName, oldName);
-        console.log(oldFilePath, newFilePath);
         try {
             if (!fs.existsSync(oldFilePath)) {
-                console.log('Fail! File dont exist');
-                return this.printCurrentDir();
+                return this.displayError();
             }
 
             fs.copyFileSync(oldFilePath, newFilePath);
@@ -145,9 +142,7 @@ class MoveAction extends Action {
             console.log('Successfully moved file!');
             this.printCurrentDir();
         } catch (error) {
-
-            console.error('Fail! File dont exist!');
-            this.printCurrentDir();
+            return this.displayError();
         }
     }
 }
@@ -165,15 +160,13 @@ class RenameAction extends Action {
         const oldName = splitFileNames[0];
         const newName = splitFileNames[1];
         if (!oldName || !newName) {
-            console.log('File dont exist!');
-            return this.printCurrentDir();
+            return this.displayError();
         }
         const oldFilePath = path.join(this.currentDir, oldName);
         const newFilePath = path.join(this.currentDir, newName);
         fs.rename(oldFilePath, newFilePath, (err) => {
             if (err) {
-                console.log('Error! Failed to rename');
-                return this.printCurrentDir();
+                return this.displayError();
             }
             console.log('Successfully renamed');
             this.printCurrentDir();
@@ -192,14 +185,12 @@ class RemoveAction extends Action {
     handle(callback = this.printCurrentDir) {
         const filePath = path.join(this.currentDir, this.pureFileName);
         if (!fs.existsSync(filePath)) {
-            console.log('File dont exist!');
-            return this.printCurrentDir();
+            return this.displayError();
         }
 
         fs.unlink(filePath, (e) => {
             if (e) {
-                console.log('Error! Failed to remove');
-                return this.printCurrentDir();
+                return this.displayError();
             }
             console.log('Success');
             if (typeof callback === 'function') {
@@ -229,10 +220,7 @@ class CopyAction extends Action {
         const newFilePath = path.join(this.currentDir, fileName + POSTFIX + '.' + ext);
         const stream = fs.createReadStream(filePath, {encoding: 'utf8'}).pipe(fs.createWriteStream(newFilePath));
 
-        stream.on('error', (e) => {
-            console.log('Error, Cant to copy')
-            return this.printCurrentDir();
-        });
+        stream.on('error', this.displayError);
         stream.on('finish', () => {
             console.log('Successfully copy')
             if (typeof callback === 'function') {
@@ -254,8 +242,7 @@ class CatAction extends Action {
         const filePath = path.join(this.currentDir, this.pureFileName);
 
         if (!fs.existsSync(filePath)) {
-            console.log('No file');
-            return this.printCurrentDir();
+            return this.displayError();
         }
 
         const stream = fs.createReadStream(filePath, {encoding: 'utf8'});
@@ -284,8 +271,7 @@ class AddAction extends Action {
             });
             stream.write('  ', (error) => {
                 if (error) {
-                    console.log('Error! Failed to add');
-                    return this.printCurrentDir();
+                    return this.displayError();
                 }
                 console.log(`Success, file ${this.pureFileName} created`);
                 this.printCurrentDir();
@@ -293,8 +279,7 @@ class AddAction extends Action {
             });
 
         } catch (e) {
-            console.log('Cant create file');
-            this.printCurrentDir();
+            this.displayError();
         }
     }
 }
@@ -318,8 +303,7 @@ class UpAction extends Action {
 
             this.printCurrentDir();
         } catch (e) {
-            console.log('Failed to get current directory');
-            this.printCurrentDir();
+            this.displayError();
         }
     }
 }
@@ -334,8 +318,7 @@ class LsAction extends Action {
         fs.readdir(this.currentDir, {withFileTypes: true}, (err, files) => {
             const LINE = '______________________________________________';
             if (err) {
-                console.log('Ошибка, не удалось прочитать папку')
-                return this.printCurrentDir();
+                return this.displayError();
             }
             console.log(LINE);
             files.sort((element) => element.isDirectory() ? -1 : 1)
@@ -370,8 +353,7 @@ class CdAction extends Action {
     handle() {
         const clearFileName = this.fileName.replace(this.homeDir, '');
         if (!clearFileName) {
-            console.log('Путь не существует/не выбран');
-            return this.printCurrentDir();
+            this.displayError();
 
         }
         let newDir = path.join(this.currentDir, clearFileName);
@@ -382,8 +364,7 @@ class CdAction extends Action {
             this.printCurrentDir();
 
         } catch (e) {
-            console.log('Путь не существует/ выбран файл');
-            this.printCurrentDir();
+            this.displayError();
         }
     }
 }

@@ -24,6 +24,7 @@ function initProcessListeners() {
 
 
 function writeActionListener(action) {
+    action = action.trim();
     if (action === EXIT_COMMAND) {
         return rl.close();
     }
@@ -34,5 +35,5 @@ function writeActionListener(action) {
         return actionController.makeAction(action);
     }
 
-    console.log('Invalid command/args');
+    console.log('Invalid input');
 }

@@ -18,6 +18,11 @@ export class Action {
     handle() {
     }
 
+    displayError = () => {
+        console.log('Operation failed');
+        this.printCurrentDir();
+    }
+
     printCurrentDir = () => {
         console.log('You are currently in ' + this.actionController.currentDir);
     }
