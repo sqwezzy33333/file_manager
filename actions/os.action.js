@@ -1,5 +1,4 @@
 import {Action} from "../actions-controller/action.js";
-import {getUserName} from "../utils/utils.js";
 import os from "os";
 
 export class OsAction extends Action {
@@ -24,7 +23,7 @@ export class OsAction extends Action {
         }
 
         if (this.arg === '--username') {
-            console.log(getUserName() || 'No username')
+            console.log(os.userInfo().username)
         }
 
         if (this.arg === '--architecture') {
@@ -55,7 +54,7 @@ export class OsAction extends Action {
     }
 
     eol() {
-        process.stdout.write(`Default system End-Of-Line: ${os.EOL}`);
+        console.log(`Default system End-Of-Line: ${JSON.stringify(os.EOL)}`);
     }
 }
 
