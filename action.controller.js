@@ -55,7 +55,6 @@ class HashAction extends Action {
     async handle() {
         try {
             const filePath = path.join(this.currentDir, this.fileName.replace(this.currentDir, ''));
-            console.log(filePath);
             fs.readFile(filePath, (err, fileBuffer) => {
                 if (err) {
                     return this.displayError();
@@ -202,14 +201,19 @@ class MoveAction extends Action {
 
             const oldFilePath = path.join(this.currentDir, oldName);
             const newFilePath = path.join(this.currentDir, newName, oldName);
-            console.log(oldFilePath, newFilePath)
 
-            fs.copyFileSync(oldFilePath, newFilePath);
-
-            fs.unlinkSync(oldFilePath);
-
-            console.log('Successfully moved file!');
-            this.printCurrentDir();
+            fs.copyFile(oldFilePath, newFilePath, (err) => {
+                if (err) {
+                    return this.displayError();
+                }
+                fs.unlink(oldFilePath, (e) => {
+                    if (e) {
+                        return this.displayError();
+                    }
+                    console.log('Successfully moved file!');
+                    this.printCurrentDir();
+                })
+            })
         } catch (error) {
             return this.displayError();
         }
@@ -229,7 +233,6 @@ class RenameAction extends Action {
         try {
             const oldFilePath = path.join(this.currentDir, this.splitFileNames[0].replace(this.currentDir, ''));
             const newFilePath = path.join(this.currentDir, this.splitFileNames[1].replace(this.currentDir, ''));
-            console.log(oldFilePath, newFilePath);
 
             fs.rename(oldFilePath, newFilePath, (err) => {
                 if (err) {
@@ -288,20 +291,21 @@ class CopyAction extends Action {
             const ext = this.pureFileName.split('.')[1];
             const POSTFIX = '_copy';
             const newFilePath = path.join(this.currentDir, fileName + POSTFIX + '.' + ext);
-            if (!fs.existsSync(filePath)) {
-                return this.displayError();
-            }
-            const stream = fs.createReadStream(filePath, {encoding: 'utf8'}).pipe(fs.createWriteStream(newFilePath));
+            fs.readFile(filePath, (err) => {
+                if (err) {
+                    return this.displayError();
+                }
+                const stream = fs.createReadStream(filePath, {encoding: 'utf8'}).pipe(fs.createWriteStream(newFilePath));
 
-            stream
-                .on('error', this.displayError)
-                .on('finish', () => {
-                    console.log('Successfully copy')
-                    if (typeof callback === 'function') {
-                        callback();
-                    }
-                });
-
+                stream
+                    .on('error', this.displayError)
+                    .on('finish', () => {
+                        console.log('Successfully copy')
+                        if (typeof callback === 'function') {
+                            callback();
+                        }
+                    });
+            })
         } catch (e) {
             this.displayError();
         }
@@ -380,9 +384,13 @@ class UpAction extends Action {
             currentPath.splice(currentPath.length - 1, 1);
             const joinNewPath = currentPath.join(path.sep);
 
-            fs.readdirSync(joinNewPath);
-            this.actionController.currentDir = joinNewPath;
-            this.printCurrentDir();
+            fs.readdir(joinNewPath, (e) => {
+                if (e) {
+                    return this.displayError();
+                }
+                this.actionController.currentDir = joinNewPath;
+                this.printCurrentDir();
+            });
         } catch (e) {
             this.displayError()
         }
@@ -439,9 +447,13 @@ class CdAction extends Action {
             const clearFileName = this.fileName.replace(this.homeDir, '');
             let newDir = path.join(this.currentDir, clearFileName);
 
-            fs.readdirSync(newDir);
-            this.actionController.currentDir = newDir;
-            this.printCurrentDir();
+            fs.readdir(newDir, err => {
+                if (err) {
+                    return this.displayError();
+                }
+                this.actionController.currentDir = newDir;
+                this.printCurrentDir();
+            });
         } catch (e) {
             this.displayError();
         }
