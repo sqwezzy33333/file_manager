@@ -52,7 +52,7 @@ class HashAction extends Action {
         this.handle();
     }
 
-    async handle() {
+    handle() {
         try {
             const filePath = path.join(this.currentDir, this.fileName.replace(this.currentDir, ''));
             fs.readFile(filePath, (err, fileBuffer) => {
@@ -85,13 +85,18 @@ class CompressAction extends Action {
             const oldFilePath = path.join(this.currentDir, oldName);
             const newFilePath = path.join(this.currentDir, newName);
 
-            fs.createReadStream(oldFilePath)
-                .pipe(zlib.createBrotliCompress())
-                .pipe(fs.createWriteStream(newFilePath))
-                .on('finish', () => {
-                    console.log('Done!');
-                    this.printCurrentDir();
-                })
+            fs.readFile(oldFilePath, (err) => {
+                if (err) {
+                    return this.displayError();
+                }
+                fs.createReadStream(oldFilePath)
+                    .pipe(zlib.createBrotliCompress())
+                    .pipe(fs.createWriteStream(newFilePath))
+                    .on('finish', () => {
+                        console.log('Done!');
+                        this.printCurrentDir();
+                    })
+            })
         } catch (e) {
             this.displayError(e);
         }
@@ -115,13 +120,19 @@ class DecompressAction extends Action {
             const oldFilePath = path.join(this.currentDir, oldName);
             const newFilePath = path.join(this.currentDir, newName);
 
-            fs.createReadStream(oldFilePath)
-                .pipe(zlib.createBrotliDecompress())
-                .pipe(fs.createWriteStream(newFilePath))
-                .on('finish', () => {
-                    console.log('DONE!');
-                    this.printCurrentDir();
-                })
+            fs.readFile(oldFilePath, (err) => {
+                if (err) {
+                    return this.displayError();
+                }
+
+                fs.createReadStream(oldFilePath)
+                    .pipe(zlib.createBrotliDecompress())
+                    .pipe(fs.createWriteStream(newFilePath))
+                    .on('finish', () => {
+                        console.log('DONE!');
+                        this.printCurrentDir();
+                    })
+            })
         } catch (e) {
             this.displayError();
         }
