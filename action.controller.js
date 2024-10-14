@@ -5,6 +5,7 @@ import * as path from "node:path";
 import {Action} from "./action.js";
 import {getUserName} from "./utils.js";
 import * as zlib from "node:zlib";
+import {createHash} from 'crypto';
 
 export class ActionController {
     currentDir = os.homedir();
@@ -37,6 +38,35 @@ export class ActionController {
         if (command === ACTIONS.compress) return new CompressAction(arg, action, this);
 
         if (command === ACTIONS.decompress) return new DecompressAction(arg, action, this);
+
+        if (command === ACTIONS.hash) return new HashAction(arg, action, this);
+    }
+}
+
+class HashAction extends Action {
+    command = 'hash';
+
+    constructor(arg, action, actionController) {
+        super(arg, action, actionController);
+        this.findFile();
+        this.handle();
+    }
+
+    async handle() {
+        try {
+            const filePath = path.join(this.currentDir, this.fileName.replace(this.currentDir, ''));
+            console.log(filePath);
+            fs.readFile(filePath, (err, fileBuffer) => {
+                if (err) {
+                    return this.displayError();
+                }
+                const hash = createHash('sha256').update(fileBuffer).digest('hex');
+                console.log(hash);
+            });
+        } catch (e) {
+            console.log(e);
+            this.displayError();
+        }
     }
 }
 
@@ -258,7 +288,7 @@ class CopyAction extends Action {
             const ext = this.pureFileName.split('.')[1];
             const POSTFIX = '_copy';
             const newFilePath = path.join(this.currentDir, fileName + POSTFIX + '.' + ext);
-            if(!fs.existsSync(filePath)) {
+            if (!fs.existsSync(filePath)) {
                 return this.displayError();
             }
             const stream = fs.createReadStream(filePath, {encoding: 'utf8'}).pipe(fs.createWriteStream(newFilePath));
@@ -266,11 +296,11 @@ class CopyAction extends Action {
             stream
                 .on('error', this.displayError)
                 .on('finish', () => {
-                console.log('Successfully copy')
-                if (typeof callback === 'function') {
-                    callback();
-                }
-            });
+                    console.log('Successfully copy')
+                    if (typeof callback === 'function') {
+                        callback();
+                    }
+                });
 
         } catch (e) {
             this.displayError();
@@ -293,7 +323,7 @@ class CatAction extends Action {
 
             const stream = fs.createReadStream(filePath, {encoding: 'utf8'});
 
-            stream.on('data', data =>  process.stdout.write(data.toString() + os.EOL))
+            stream.on('data', data => process.stdout.write(data.toString() + os.EOL))
                 .on('error', this.displayError)
                 .on('end', this.printCurrentDir);
         } catch (e) {
