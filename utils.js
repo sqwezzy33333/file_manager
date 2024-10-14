@@ -19,9 +19,7 @@ export function goodBye(user) {
 }
 
 export function helloUser(user) {
-    if (user) {
-        console.log(`Welcome to the File Manager, ${user || 'NoName'}!`);
-    }
+    console.log(`Welcome to the File Manager, ${user || 'NoName'}!`);
     printHomeDir();
 }
 

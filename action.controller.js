@@ -172,6 +172,7 @@ class MoveAction extends Action {
 
             const oldFilePath = path.join(this.currentDir, oldName);
             const newFilePath = path.join(this.currentDir, newName, oldName);
+            console.log(oldFilePath, newFilePath)
 
             fs.copyFileSync(oldFilePath, newFilePath);
 
@@ -196,8 +197,9 @@ class RenameAction extends Action {
 
     handle() {
         try {
-            const oldFilePath = path.join(this.currentDir, this.splitFileNames[0]);
-            const newFilePath = path.join(this.currentDir, this.splitFileNames[1]);
+            const oldFilePath = path.join(this.currentDir, this.splitFileNames[0].replace(this.currentDir, ''));
+            const newFilePath = path.join(this.currentDir, this.splitFileNames[1].replace(this.currentDir, ''));
+            console.log(oldFilePath, newFilePath);
 
             fs.rename(oldFilePath, newFilePath, (err) => {
                 if (err) {
@@ -256,14 +258,20 @@ class CopyAction extends Action {
             const ext = this.pureFileName.split('.')[1];
             const POSTFIX = '_copy';
             const newFilePath = path.join(this.currentDir, fileName + POSTFIX + '.' + ext);
+            if(!fs.existsSync(filePath)) {
+                return this.displayError();
+            }
             const stream = fs.createReadStream(filePath, {encoding: 'utf8'}).pipe(fs.createWriteStream(newFilePath));
 
-            stream.on('finish', () => {
+            stream
+                .on('error', this.displayError)
+                .on('finish', () => {
                 console.log('Successfully copy')
                 if (typeof callback === 'function') {
                     callback();
                 }
             });
+
         } catch (e) {
             this.displayError();
         }
