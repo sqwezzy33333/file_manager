@@ -1,5 +1,5 @@
 import os from 'os';
-import {ACTIONS, ACTIONS_REQUIRE_ARGUMENTS} from './constants.js';
+import {ACTIONS, ACTIONS_REQUIRE_ARGUMENTS} from '../constants/constants.js';
 
 export const getUserName = () => {
     try {
