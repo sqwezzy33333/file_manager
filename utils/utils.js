@@ -1,5 +1,5 @@
 import os from 'os';
-import {ACTIONS, ACTIONS_REQUIRE_ARGUMENTS} from './constants.js';
+import {ACTIONS, ACTIONS_REQUIRE_ARGUMENTS} from '../constants/constants.js';
 
 export const getUserName = () => {
     try {
@@ -19,9 +19,7 @@ export function goodBye(user) {
 }
 
 export function helloUser(user) {
-    if (user) {
-        console.log(`Welcome to the File Manager, ${user || 'NoName'}!`);
-    }
+    console.log(`Welcome to the File Manager, ${user || 'NoName'}!`);
     printHomeDir();
 }
 

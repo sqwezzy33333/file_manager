@@ -18,6 +18,11 @@ export class Action {
     handle() {
     }
 
+    displayError = () => {
+        console.log('Operation failed');
+        this.printCurrentDir();
+    }
+
     printCurrentDir = () => {
         console.log('You are currently in ' + this.actionController.currentDir);
     }
@@ -32,5 +37,9 @@ export class Action {
 
     get pureFileName() {
         return this.fileName.trim().replace(this.currentDir, '');
+    }
+
+    get splitFileNames() {
+        return this.pureFileName.split(' ').filter(Boolean);
     }
 }

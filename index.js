@@ -1,7 +1,7 @@
-import {commandValidator, getUserName, goodBye, helloUser} from "./utils.js";
+import {commandValidator, getUserName, goodBye, helloUser} from "./utils/utils.js";
 import * as readline from "node:readline";
-import {EXIT_COMMAND} from "./constants.js";
-import {ActionController} from "./action.controller.js";
+import {EXIT_COMMAND} from "./constants/constants.js";
+import {ActionController} from "./actions-controller/action.controller.js";
 
 const {stdin: input, stdout: output} = process;
 const user = getUserName();
@@ -24,6 +24,7 @@ function initProcessListeners() {
 
 
 function writeActionListener(action) {
+    action = action.trim();
     if (action === EXIT_COMMAND) {
         return rl.close();
     }
@@ -34,5 +35,5 @@ function writeActionListener(action) {
         return actionController.makeAction(action);
     }
 
-    console.log('Invalid command/args');
+    console.log('Invalid input');
 }
